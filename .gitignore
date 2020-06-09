@@ -1,0 +1,8 @@
+**/rawData
+**/venv
+**/.idea
+**/.ipynb_checkpoints
+**/rsconnect
+**/__pycache__
+.Rproj.user/
+.Rhistory
