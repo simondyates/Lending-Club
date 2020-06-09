@@ -4,5 +4,7 @@
 **/.ipynb_checkpoints
 **/rsconnect
 **/__pycache__
+**/*.csv
 .Rproj.user/
 .Rhistory
+.DS_Store
