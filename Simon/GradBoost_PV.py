@@ -35,22 +35,22 @@ if scale:
        'fico_range_high', 'fico_range_low']
     cols_to_scale = date_cols + num_cols
     ct = make_column_transformer((StandardScaler(), cols_to_scale), remainder='passthrough')
-    X_train = ct.fit_transform(X_train)
-    X_test = ct.transform(X_test)
+    X_train_s = ct.fit_transform(X_train)
+    X_test_s = ct.transform(X_test)
 
 # Run gradient boost regressor
 boost = GradientBoostingRegressor(subsample=0.1, verbose=1)
-boost.fit(X_train, y_train)
-print(f'IS R^2: {boost.score(X_train, y_train):.2%}')
-print(f'OOS R^2: {boost.score(X_test, y_test):.2%}')
+boost.fit(X_train_s, y_train)
+print(f'IS R^2: {boost.score(X_train_s, y_train):.2%}')
+print(f'OOS R^2: {boost.score(X_test_s, y_test):.2%}')
 
 # Now, invest $100,000 in the 100 best loans in test
 # Current code assumes each loan is at least $1k size (I think this is true though)
-pvs = pd.Series(boost.predict(X_test)).sort_values()
+pvs = pd.Series(boost.predict(X_test_s)).sort_values()
 selected = pvs.index[-100:]
-pv_sel = y_test[selected].sum()
+pv_sel = y_test[selected] @ (1000/X_test.iloc[selected, 1])
 rand = np.random.choice(pvs.index, 100, replace=False)
-pv_rand = y_test[rand].sum()
+pv_rand = y_test[rand] @ (1000/X_test.iloc[rand, 1])
 print(f'PV of selected: {pv_sel:,.0f}')
 print(f'PV of random: {pv_rand:,.0f}')
 
