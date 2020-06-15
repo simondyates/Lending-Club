@@ -41,6 +41,7 @@ def PV(start, stop, loan, paid, recovered, rate=0, rec_lag=9):
     return(PV - loan)
 
 def get_rate(df, start, stop):
+    # return an appoximate risk free rate as of start for term (stop-start)
     days = (stop - start).days
     idx = df.index.get_loc(start, method='pad')
     if days <= 15:
