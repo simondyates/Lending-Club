@@ -12,7 +12,6 @@ import numpy as np
 scale = True
 
 accept = pd.read_pickle('../derivedData/train.pkl')
-#accept.set_index('id', inplace = True)
 
 # Split target from attributes and normalise attribs
 y = accept['PV'].to_numpy()
