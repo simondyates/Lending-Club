@@ -7,12 +7,12 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
 import numpy as np
+from joblib import dump
 
 # Global Variables
 scale = True
 
 accept = pd.read_pickle('../derivedData/train.pkl')
-#accept.set_index('id', inplace = True)
 
 # Split target from attributes and normalise attribs
 y = accept['PV'].to_numpy()
@@ -53,4 +53,8 @@ rand = np.random.choice(pvs.index, 100, replace=False)
 pv_rand = y_test[rand] @ (1000/X_test.iloc[rand, 1])
 print(f'PV of selected: {pv_sel:,.0f}')
 print(f'PV of random: {pv_rand:,.0f}')
+
+# Save the model for later use
+dump(boost, '../derivedData/boost.joblib')
+dump(ct, '../derivedData/boost_scaler.joblib')
 

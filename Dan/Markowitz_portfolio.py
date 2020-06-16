@@ -1,22 +1,34 @@
 import numpy as np
 from scipy.optimize import minimize
 
-def Markowitz_portfolio(exp_returns, covar_returns, loan_amount, inv_amount, risk_tol):
-    exp_returns = np.array(exp_returns)
-    covar_returns = np.array(covar_returns)
-    loan_amount = np.array(loan_amount)
-    n = len(exp_returns)
+def Markowitz_portfolio(ret_def, ret_notdef, prob_def, loan_amount, inv_amount, risk_tol):
+    '''
 
-    objective = lambda w: np.transpose(w).dot(covar_returns).dot(w) - risk_tol*(np.transpose(exp_returns).dot(w))
+    :param ret_def: list of returns predicted if loans default
+    :param ret_notdef: list of returns predicted if loans not default
+    :param prob_def: list of probability of default
+    :param loan_amount: maximum investment for each loan
+    :param inv_amount: money amount invested in the portfolio
+    :param risk_tol: risk tolerance of the investor
+    :return: list of weights of the portfolio, returns
+    '''
+
+    # risk_returns = ExpectedShortfall(k-means)
+    risk_returns = 'tbd'
+    n = len(ret_def)
+
+    returns = prob_def*ret_def + (1 - prob_def)*ret_notdef
+    objective = lambda w: np.transpose(w).dot(risk_returns).dot(w) - risk_tol*(np.transpose(returns).dot(w))
 
     # Can't invest more than what you have
     cst1 = lambda w: 1-sum(w)
-
-    # Can't invest less than 25$ on a single loan
-    cst2 = lambda w: 25-w*inv_amount
+    cst2 = lambda w: sum(w)-.9
 
     # Can't invest more than the loan amount
-    cst3 = lambda w: loan_amount-
+    cst3 = lambda w: loan_amount-w*inv_amount
+
+    # Risk tolerance constraint
+    cst4 = lambda w: risk_tol - np.transpose(w).dot(risk_returns)
 
     constraints = (
         {'type': 'ineq', 'fun': cst1},
@@ -28,21 +40,22 @@ def Markowitz_portfolio(exp_returns, covar_returns, loan_amount, inv_amount, ris
 
     res = minimize(objective, x0=x0, method='SLSQP', constraints=constraints)
 
-    exp_port = (res.x*inv_amount).dot(exp_returns)
-    var_port =
+    exp_port = res['x'].dot(ret_def)
+    # var_port = np.transpose(res['x']).dot(covarMat).dot(res['x'])
 
     print(f'Expected return of the portfolio : {exp_port}')
-    print(f'Variance of the portfolio : {var_port}')
+    # print(f'Variance of the portfolio : {var_port}')
 
     print(res)
 
 
-muVec = [.1, .09, .08, .07]
-covarMat = [[.16, 0, 0, 0],
-            [0, .09, 0, 0],
-            [0, 0, .08, 0],
-            [0, 0, 0, .07]]
-capVec = [1000, 1000, 1000, 1000]
-investAmount = 100
-risk_tol = .5
-Markowitz_portfolio(muVec, covarMat, capVec, investAmount, risk_tol)
+# muVec = [.1, .09, .08, .07, .3]
+# covarMat = [[.16, 0, 0, 0, 0],
+#             [0, .09, 0, 0, 0],
+#             [0, 0, 0.06, 0, 0],
+#             [0, 0, 0, .07, 0],
+#             [0, 0, 0, 0, .21]]
+# capVec = [1000, 1000, 1000, 1000, 1000]
+# investAmount = 150
+# risk_tol = .5
+# Markowitz_portfolio(muVec, covarMat, capVec, investAmount, risk_tol)
