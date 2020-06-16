@@ -55,7 +55,7 @@ class Portfolio:
         if start in self.cashflows:
             self.cashflows[start] -= amnt
         else:
-            self.cashflows[start] = amnt
+            self.cashflows[start] = -amnt
         ratio = amnt / self.__univ.loc[id, 'funded_amnt']
         months = int((stop - start).days * 12 / 365)
         pmts = ratio * (self.__univ.loc[id, 'total_pymnt'] - self.__univ.loc[id, 'recoveries'])
@@ -144,4 +144,4 @@ print(f'Total funded: {port_sel.drawdown(fv_date):,.0f}')
 print(f'Total FV of selected: {port_sel.FV(fv_date):,.0f}')
 print(f'Total FV of rand: {port_rand.FV(fv_date):,.0f}')
 
-# get rid of unused vars in class
+# implement an IRR calculation in the class
