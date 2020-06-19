@@ -43,17 +43,18 @@ def PV(start, stop, loan, paid, recovered, rate=0, rec_lag=9):
 def get_rate(df, start, stop):
     # return an appoximate risk free rate as of start for term (stop-start)
     days = (stop - start).days
-    idx = df.index.get_loc(start, method='pad')
+    idx = df.index[df.index.get_loc(start, method='pad')]
     if days <= 15:
-        return (df.iloc[idx, 6]) # FF
+        r = df.loc[idx, 'FEDL01 Index']
     elif days <= 365:
-        return(df.iloc[idx, 5]) # 3mo LIBOR
+        r = df.loc[idx, 'US0003M Index']
     elif days <= 365 * 2.5:
-        return(df.iloc[idx, 2]) # 2yr T
+        r = df.loc[idx, 'GT2 Govt']
     elif days <= 365 * 4:
-        return(df.iloc[idx, 3]) # 3yr T
+        r = df.loc[idx, 'GT3 Govt']
     else:
-        return (df.iloc[idx, 4])  # 5yr T
+        r = df.loc[idx, 'GT5 Govt']
+    return(r/100)
 
 print('Populating Rates')
 df = accept[['issue_d', 'last_pymnt_d']]
@@ -61,7 +62,7 @@ accept['RF_rate'] = df.apply(lambda x: get_rate(rates, x[0], x[1]), axis=1)
 print('-'*20)
 print('Populating PVs')
 df = accept[['issue_d', 'last_pymnt_d', 'funded_amnt', 'total_pymnt', 'recoveries', 'RF_rate']]
-accept['PV'] = df.apply(lambda x: PV(x[0], x[1], x[2], x[3], x[4], x[5]/100), axis=1)
+accept['PV'] = df.apply(lambda x: PV(x[0], x[1], x[2], x[3], x[4], x[5]), axis=1)
 print('-'*20)
 
 # return cols to int

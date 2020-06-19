@@ -29,7 +29,7 @@ est_steps = 60 # Add this many estimators to the model each refit
 # Tactic parameters
 max_per_loan = 1000 # USD in any one loan
 max_per_month = 100000 / 6 # USD max spend in any one month - to slow speed of initial ramp up
-max_portfolio = 100000 # USD. The current implementation interprets this as max external funding requirement
+max_funding = 100000 # USD. The maximum amount of external funding that's available
 min_ret = .1 # The minimum required value of (PV/Principal-1) in order to invest in a loan
 
 # Define a class to track a portfolio of LC loans; construct cash-flows for them; and calculate metrics
@@ -120,7 +120,7 @@ accept = pd.read_pickle('../derivedData/train.pkl')
 # Remove rows we don't understand
 accept = accept[accept['last_pymnt_d'] >= accept['issue_d']]
 # set up the Yield Curve
-rates = pd.read_csv('../macroData/rates.csv', index_col=0)
+rates = pd.read_csv('../macroData/Rates.csv', index_col=0)
 rates.index = pd.to_datetime(rates.index)
 yc = YieldCurve(rates)
 
@@ -161,8 +161,10 @@ for i, date in enumerate(dates):
         boost.fit(X_train_s, y_train)
         print(f'IS R^2: {boost.score(X_train_s, y_train):.2%}')
     # Determine what we have to invest this month
+    if str(date)[4:6] == '01':
+        print(f'Simulating for {date}')
     d = dt.datetime.strptime(str(date), '%Y%m%d')
-    budget = min(max_per_month, max_portfolio + port_sel.spent(d))
+    budget = min(max_per_month, max_funding + port_sel.spent(d))
     n_to_buy = int(budget / max_per_loan)
     # Select the loans that will issue this month
     bools = X['issue_d']==date
@@ -221,6 +223,7 @@ fig = go.Figure(data=[go.Table(
                         [',.0f'], [',.0f'], [',.0f'], [',.0f'],
                         [',.0f'], [',.0f'], [',.0f']]))
 ])
+fig.update_layout(title=f'Simulation Results: IRR of Selected loans {port_sel.IRR(fv_date):.1%}')
 fig.show()
 
 # Tweak the model: hyper param tunning and pruning

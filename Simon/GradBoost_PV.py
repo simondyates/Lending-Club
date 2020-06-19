@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
 import numpy as np
 from joblib import dump
+import matplotlib
 
 # Global Variables
 scale = True
@@ -58,3 +59,10 @@ print(f'PV of random: {pv_rand:,.0f}')
 dump(boost, '../derivedData/boost.joblib')
 dump(ct, '../derivedData/boost_scaler.joblib')
 
+# Plot the distribution of predictions
+ax1 = pvs.hist(bins=100, label='pred')
+pd.Series(y_test).hist(ax=ax1, bins=100, label='actual', alpha=.2)
+ax1.legend()
+ax1.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+ax1.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+ax1.set_title('Actual vs Predicted PVs')
