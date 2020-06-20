@@ -82,3 +82,11 @@ class Portfolio:
         df5 = self.get_cashflows(d)
         r = npf.irr(df5['net'])
         return(2 * ((1 + r)**6 - 1))
+
+    def rating(self):
+        # Return average rating as string
+        size = sum(self.amnts)
+        avg_r = sum([self.__univ__.loc[self.ids[i], 'sub_grade'] * self.amnts[i] / size for i in range(len(self.ids))])
+        avg_r = int(round(avg_r))
+        sub_gs = [i+j for i in ['A', 'B', 'C', 'D', 'E', 'F', 'G'] for j in ['1', '2', '3', '4', '5']]
+        return(sub_gs[avg_r])

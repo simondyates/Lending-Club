@@ -100,8 +100,8 @@ for i, date in enumerate(dates):
 
 # Generate results
 fv_date = max(port_sel.receipts.keys())
-res_sel = port_sel .get_cashflows(fv_date)
-res_rand = port_rand .get_cashflows(fv_date)
+res_sel = port_sel.get_cashflows(fv_date)
+res_rand = port_rand.get_cashflows(fv_date)
 results = res_sel.join(res_rand, how='outer', lsuffix='_sel', rsuffix='_rand')
 results['PVs_sel'] = results['PVs_sel'] / results['n_loans_sel']
 results['PVs_rand'] = results['PVs_rand'] / results['n_loans_rand']
@@ -141,7 +141,7 @@ fig = go.Figure(data=[go.Table(
                         [',.0f'], [',.0f'], [',.0f'], [',.0f'],
                         [',.0f'], [',.0f'], [',.0f']]))
 ])
-fig.update_layout(title=f'IRR of Selected Loans {port_sel.IRR(fv_date):.1%} vs. {port_rand.IRR(fv_date):.1%} for Random')
+fig.update_layout(title=f'IRR of Selected Loans {port_sel.IRR(fv_date):.1%} with rating {port_sel.rating()} vs. {port_rand.IRR(fv_date):.1%} for Random')
 fig.show()
 
 # Tweak the model: hyper param tuning and pruning
