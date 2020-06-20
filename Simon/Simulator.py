@@ -23,7 +23,7 @@ import plotly.io as pio
 lc_fee = .01 # i.e. 1%.  This is charged on all on-time payments.  I'm assuming the numbers we have are gross so we need to subtract this
 rec_lag = 9 # recoveries arrive 'rec_lag' months after last_pymnt_d
 first_invest = 20100101 # Use data before this point to fit the starting model.  This gives us 1 year of data (not a lot).
-refit = 44 # Refit the model every 'refit' months
+refit = 48 # Refit the model every 'refit' months
 est_steps = 60 # Add this many estimators to the model each refit
 
 # Tactic parameters
@@ -80,10 +80,10 @@ class Portfolio:
         if dates == []:
             df1 = pd.DataFrame({'payments': 0, 'receipts': 0, 'net': 0, 'PV': 0}, index=[d])
         else:
-            s1 = pd.Series([self.n_loans[dat] for dat in dates if dat <= d], index=dates, name='n_loans')
-            s2 = pd.Series([self.payments[dat] for dat in dates if dat <= d], index=dates, name='payments')
-            s3 = pd.Series([self.receipts[dat] for dat in dates if dat <= d], index=dates, name='receipts')
-            s4 = pd.Series([self.PVs[dat] for dat in dates if dat <= d], index=dates, name='PVs')
+            s1 = pd.Series([self.n_loans[dat] for dat in dates], index=dates, name='n_loans')
+            s2 = pd.Series([self.payments[dat] for dat in dates], index=dates, name='payments')
+            s3 = pd.Series([self.receipts[dat] for dat in dates], index=dates, name='receipts')
+            s4 = pd.Series([self.PVs[dat] for dat in dates], index=dates, name='PVs')
             df1 = pd.concat([s1, s2, s3, s4], axis=1)
             df1['net'] = df1['payments'] + df1['receipts']
             df1 = df1[['n_loans', 'payments', 'receipts', 'net', 'PVs']]
@@ -125,7 +125,7 @@ rates.index = pd.to_datetime(rates.index)
 yc = YieldCurve(rates)
 
 # Split target from attributes and normalise attribs
-y = accept['PV'].to_numpy()
+y = (accept['PV'] / accept['funded_amnt']).to_numpy()
 X = accept.drop(['PV', 'loan_status'], axis=1)
 
 # Drop attributes with updates after loan inception
@@ -170,10 +170,7 @@ for i, date in enumerate(dates):
     bools = X['issue_d']==date
     idx = X.index[bools]
     # Predict PVs for them
-    pvs = boost.predict(X_s[bools, :])
-    amnts = X.loc[idx, 'funded_amnt']
-    # Calculate return ratios
-    rets = (pvs / amnts).sort_values()
+    rets = pd.Series(boost.predict(X_s[bools, :]), index=idx).sort_values()
     # Purchase the selected and random loans
     bought = len([port_sel.add(rets.index[-i], max_per_loan)
                   for i in range(1, n_to_buy + 1) if rets.iloc[-i] >= min_ret])
@@ -210,12 +207,12 @@ print('-'*25)
 
 pio.renderers.default = "browser"
 results = results.reset_index()
-heads = ['Year', '# Loans', '% LC by Count', '% LC by Value', 'Pmts', 'Rcts (sel)', 'Net (sel)',
-         'Rcts (rnd)', 'Net (rnd)', 'PV/loan (sel)', 'PV/loan (rnd)']
+heads = ['Year', '# Loans', '% LC by Count', '% LC by Value', 'Payments', 'Receipts (selected)', 'Net (selected)',
+         'Receipts (random)', 'Net (random)', 'PV/loan (selected)', 'PV/loan (random)']
 fig = go.Figure(data=[go.Table(
     header=dict(values=heads,
                 fill_color='paleturquoise',
-                align='center'),
+                align='left'),
     cells=dict(values=[results[col] for col in results.columns],
                fill_color='lavender',
                align='right',
@@ -223,8 +220,8 @@ fig = go.Figure(data=[go.Table(
                         [',.0f'], [',.0f'], [',.0f'], [',.0f'],
                         [',.0f'], [',.0f'], [',.0f']]))
 ])
-fig.update_layout(title=f'Simulation Results: IRR of Selected loans {port_sel.IRR(fv_date):.1%}')
+fig.update_layout(title=f'IRR of Selected Loans {port_sel.IRR(fv_date):.1%} vs. {port_rand.IRR(fv_date):.1%} for Random')
 fig.show()
 
-# Tweak the model: hyper param tunning and pruning
+# Tweak the model: hyper param tuning and pruning
 # Fit tactic params
