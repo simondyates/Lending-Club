@@ -17,12 +17,12 @@ accept = pd.read_pickle('../derivedData/train.pkl')
 
 # Split target from attributes and normalise attribs
 y = (accept['PV'] / accept['funded_amnt']).to_numpy()
-X = accept.drop(['PV', 'loan_status'], axis=1)
+X = accept.drop(['id', 'PV', 'loan_status'], axis=1)
 
 # Drop attributes with updates after loan inception
 leaks = ['recoveries', 'total_pymnt', 'dti', 'last_pymnt_d',
          'revol_util', 'open_acc', 'pub_rec', 'revol_bal',
-         'revol_util', 'delinq_2yrs']
+         'revol_util', 'delinq_2yrs', 'RF_rate']
 X = X.drop(leaks, axis=1)
 
 # Split into train and test

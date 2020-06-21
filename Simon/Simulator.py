@@ -17,15 +17,17 @@ from Portfolio import Portfolio
 from YieldCurve import YieldCurve
 import plotly.graph_objects as go
 import plotly.io as pio
+import psutil
 
 # Global parameters
 lc_fee = .01 # i.e. 1%.  This is charged on all on-time payments.  I'm assuming the numbers we have are gross so we need to subtract this
 rec_lag = 9 # recoveries arrive 'rec_lag' months after last_pymnt_d
 first_invest = 20100101 # Use data before this point to fit the starting model.  This gives us 1 year of data (not a lot).
-refit = 48 # Refit the model every 'refit' months
-est_steps = 60 # Add this many estimators to the model each refit
+refit = 6 # Refit the model every 'refit' months
+est_steps = 10 # Add this many estimators to the model each refit
 
 # Tactic parameters
+max_grade = 14 # i.e. Grades A-D
 max_per_loan = 1000 # USD in any one loan
 max_per_month = 100000 / 6 # USD max spend in any one month - to slow speed of initial ramp up
 max_funding = 100000 # USD. The maximum amount of external funding that's available
@@ -38,8 +40,8 @@ min_ret = .1 # The minimum required value of (PV/Principal-1) in order to invest
 
 # Read in data
 accept = pd.read_pickle('../derivedData/train.pkl')
-# Remove rows we don't understand
-accept = accept[accept['last_pymnt_d'] >= accept['issue_d']]
+# Remove rows not meeting grade criteria
+accept = accept[accept['sub_grade'] <= max_grade]
 # set up the Yield Curve
 rates = pd.read_csv('../macroData/Rates.csv', index_col=0)
 rates.index = pd.to_datetime(rates.index)
@@ -47,12 +49,12 @@ yc = YieldCurve(rates)
 
 # Split target from attributes and normalise attribs
 y = (accept['PV'] / accept['funded_amnt']).to_numpy()
-X = accept.drop(['PV', 'loan_status'], axis=1)
+X = accept.drop(['id', 'PV', 'loan_status'], axis=1)
 
 # Drop attributes with updates after loan inception
 leaks = ['recoveries', 'total_pymnt', 'dti', 'last_pymnt_d',
          'revol_util', 'open_acc', 'pub_rec', 'revol_bal',
-         'revol_util', 'delinq_2yrs']
+         'revol_util', 'delinq_2yrs', 'RF_rate']
 X = X.drop(leaks, axis=1)
 
 # Initialise scaler
@@ -78,7 +80,7 @@ for i, date in enumerate(dates):
         y_train = y[X['issue_d'] < date]
         X_train_s = ct.fit_transform(X_train)
         X_s = ct.transform(X)
-        boost.set_params(n_estimators= 35 + int(i * est_steps / 12))
+        boost.set_params(n_estimators= 35 + int( (i / refit) * est_steps) )
         boost.fit(X_train_s, y_train)
         print(f'IS R^2: {boost.score(X_train_s, y_train):.2%}')
     # Determine what we have to invest this month
@@ -141,8 +143,11 @@ fig = go.Figure(data=[go.Table(
                         [',.0f'], [',.0f'], [',.0f'], [',.0f'],
                         [',.0f'], [',.0f'], [',.0f']]))
 ])
-fig.update_layout(title=f'IRR of Selected Loans {port_sel.IRR(fv_date):.1%} with rating {port_sel.rating()} vs. {port_rand.IRR(fv_date):.1%} for Random')
+fig.update_layout(title=f'IRR of Selected Loans {port_sel.IRR(fv_date):.1%} with Average Rating {port_sel.rating()} vs. {port_rand.IRR(fv_date):.1%} for Random')
 fig.show()
+n = dt.datetime.today()
+t_str = dt.datetime.strftime(n, '%H%M%S')
+fig.write_image('../rawData/Sim' + t_str + '.jpg', width=1000, height=600)
 
 # Tweak the model: hyper param tuning and pruning
 # Fit tactic params
