@@ -35,7 +35,7 @@ class Portfolio:
                 d = d + dt.timedelta(days=31)
                 d = dt.datetime(d.year, d.month, 1)
                 self.receipts[d] += pmts / months
-        recs = ratio * self.__univ__.loc[id, 'recoveries'] # No LC fee on recoveries
+        recs = ratio * self.__univ__.loc[id, 'recoveries'] * (1 - self.lc_fee)
         if recs > 0:
             d = stop + dt.timedelta(days = 31*self.rec_lag)
             d = dt.datetime(d.year, d.month, 1)
