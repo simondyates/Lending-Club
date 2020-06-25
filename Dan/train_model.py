@@ -5,7 +5,7 @@ from sklearn.linear_model import Ridge, Lasso
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 
-def train_model(models, X, Y):
+def tune_model(models, X, Y):
     verbose = 1
 
     models = [x.lower() for x in models]
@@ -65,7 +65,7 @@ def train_model(models, X, Y):
 
         grid_search['random_forest'].fit(X, Y)
 
-        print(f'Time to train : {time.time() - tic} sec')
+        print(f'Time to train : {np.round((time.time() - tic)/60)} min')
 
 
     return grid_search

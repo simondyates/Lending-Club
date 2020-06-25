@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 from data_helpers import normalize_arr
-from train_model import train_model
+from train_model import tune_model
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -90,7 +90,7 @@ if dummify & normalize:
 
 list_models = ['randomForest']
 
-grids = train_model(list_models, X_train, Y_train[target])
+grids = tune_model(list_models, X_train, Y_train[target])
 
 predicted_returns = {}
 
