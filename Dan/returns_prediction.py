@@ -88,7 +88,7 @@ if dummify & normalize:
 
 # -------------------------- Linear model ----------------------------
 
-list_models = ['Ridge', 'Lasso']
+list_models = ['randomForest']
 
 grids = train_model(list_models, X_train, Y_train[target])
 

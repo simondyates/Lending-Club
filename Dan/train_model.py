@@ -3,19 +3,20 @@ import time
 
 from sklearn.linear_model import Ridge, Lasso
 from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestRegressor
 
 def train_model(models, X, Y):
     verbose = 1
 
     models = [x.lower() for x in models]
 
-    tic = time.time()
-
     grid_search = {}
 
     # ----------------------------- Ridge ------------------------------
     if 'ridge' in models:
         print(f'===== Training Ridge =====')
+        tic = time.time()
+
         ridge = Ridge()
 
         params = {
@@ -31,6 +32,8 @@ def train_model(models, X, Y):
     # ----------------------------- Lasso -------------------------------
     if 'lasso' in models:
         print(f'===== Training Lasso =====')
+        tic = time.time()
+
         lasso = Lasso()
 
         params = {
@@ -38,10 +41,31 @@ def train_model(models, X, Y):
             'selection': ['cyclic', 'random']
         }
 
-        grid_search['lasso'] = GridSearchCV(lasso, params, scoring='r2', cv=10, verbose=verbose, n_jobs=4)
+        grid_search['lasso'] = GridSearchCV(lasso, params, scoring='r2', cv=6, verbose=verbose, n_jobs=4)
 
         grid_search['lasso'].fit(X, Y)
 
         print(f'Time to train : {time.time() - tic} sec')
+
+    # ----------------------------- Random Forest ---------------------------
+    if 'randomforest' in models:
+        print('===== Random Forest =====')
+        tic = time.time()
+
+        rf = RandomForestRegressor()
+
+        params = {
+            'n_estimators':[100, 250, 500],
+            'max_depth':[2,3,4],
+            'min_samples_leaf':[100, 1000, 5000],
+            'n_jobs':[6]
+        }
+
+        grid_search['random_forest'] = GridSearchCV(rf, params, scoring='r2', cv=6, verbose=3)
+
+        grid_search['random_forest'].fit(X, Y)
+
+        print(f'Time to train : {time.time() - tic} sec')
+
 
     return grid_search
