@@ -1,11 +1,14 @@
 import numpy as np
+import pandas as pd
 import time
+import pickle
 
 from sklearn.linear_model import Ridge, Lasso
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 
-def tune_model(models, X, Y):
+
+def tune_model(models, X, Y, save_results=True):
     verbose = 1
 
     models = [x.lower() for x in models]
@@ -27,8 +30,11 @@ def tune_model(models, X, Y):
 
         grid_search['ridge'].fit(X, Y)
 
-        print(f'Time to train : {time.time() - tic} sec')
+        print(f'Time to tune : {time.time() - tic} sec')
 
+        t = time.localtime()
+        filename = f'./Model_results/ridge_{Y.name}_{t.tm_mon}{t.tm_mday}{t.tm_hour}{t.tm_min}.sav'
+        pickle.dump(grid_search['ridge'], open(filename, 'wb'))
     # ----------------------------- Lasso -------------------------------
     if 'lasso' in models:
         print(f'===== Training Lasso =====')
@@ -45,8 +51,11 @@ def tune_model(models, X, Y):
 
         grid_search['lasso'].fit(X, Y)
 
-        print(f'Time to train : {time.time() - tic} sec')
+        print(f'Time to tune : {time.time() - tic} sec')
 
+        t = time.localtime()
+        filename = f'./Model_results/lasso_{Y.name}_{t.tm_mon}{t.tm_mday}{t.tm_hour}{t.tm_min}.sav'
+        pickle.dump(grid_search['lasso'], open(filename, 'wb'))
     # ----------------------------- Random Forest ---------------------------
     if 'randomforest' in models:
         print('===== Random Forest =====')
@@ -65,7 +74,10 @@ def tune_model(models, X, Y):
 
         grid_search['random_forest'].fit(X, Y)
 
-        print(f'Time to train : {np.round((time.time() - tic)/60)} min')
+        print(f'Time to tune : {np.round((time.time() - tic)/60)} min')
 
+        t = time.localtime()
+        filename = f'./Model_results/RF_{Y.name}_{t.tm_mon}{t.tm_mday}{t.tm_hour}{t.tm_min}.sav'
+        pickle.dump(grid_search['random_forest'], open(filename, 'wb'))
 
     return grid_search

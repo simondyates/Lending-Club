@@ -88,7 +88,7 @@ if dummify & normalize:
 
 # -------------------------- Linear model ----------------------------
 
-list_models = ['randomForest']
+list_models = ['ridge']
 
 grids = tune_model(list_models, X_train, Y_train[target])
 
