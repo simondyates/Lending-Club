@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 
 from data_helpers import normalize_arr
 from train_model import tune_model
+from model_validation import score_regression
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -91,6 +92,8 @@ if dummify & normalize:
 list_models = ['ridge']
 
 grids = tune_model(list_models, X_train, Y_train[target])
+
+score_regression(grids['ridge'].best_estimator_, X_test, Y_test[target], prints=True, save_results=True)
 
 predicted_returns = {}
 

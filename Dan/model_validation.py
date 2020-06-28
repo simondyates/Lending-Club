@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-def score_regression(model, X_test, Y_test, print=True, save_results=True):
+def score_regression(model, X_test, Y_test, prints=True, save_results=True):
     model_name = type(model).__name__
-    Y_test_hat = model_name.predict(X_test)
+    Y_test_hat = model.predict(X_test)
 
     n = len(Y_test_hat)
     p = X_test.shape[1]
@@ -22,13 +22,13 @@ def score_regression(model, X_test, Y_test, print=True, save_results=True):
     AIC = n * np.log(MSE) + 2 * (p + 1)
     F = (MSM / MSE) * ((p - 1) / (n - p))
 
-    dt_stamp = datetime.now().strftime('%m-%d %H-%M')
+    dt_stamp = datetime.now().strftime('%m-%d_%H-%M')
 
-    data = [model_name, bias, maxDev, meanAbsDev, MSE ** 0.5, R2, Adj_R2, skew, kurt, AIC, F, dt_stamp]
+    data = [model_name, bias, maxDev, meanAbsDev, MSE ** 0.5, R2, Adj_R2, skew, kurt, AIC, F]
     idx = ['Model', 'Bias', 'MaxDev', 'MeanAbsDev', 'RMSE', 'R2', 'Adj_R2', 'Skew', 'Kurt', 'AIC', 'F']
     results = pd.Series(data, index=idx)
 
-    if (print):
+    if (prints):
         print('-' * len(model_name))
         print(model_name)
         print('-' * len(model_name))
@@ -44,4 +44,4 @@ def score_regression(model, X_test, Y_test, print=True, save_results=True):
         print(f'F: {F:.2f}')
         print('-' * len(model_name))
     if (save_results):
-        results.to_csv(f'./Model_results/{model_name[:10]} {dt_stamp}.csv')
+        results.to_csv(f'./Model_results/{model_name[:10]}_{dt_stamp}.csv')
