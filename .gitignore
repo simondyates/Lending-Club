@@ -1,6 +1,7 @@
 **/rawData
 **/features
 **/derivedData
+**/Model_results
 **/env
 **/.idea
 **/.ipynb_checkpoints

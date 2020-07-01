@@ -3,7 +3,7 @@ import time
 import pickle
 from datetime import datetime
 
-from sklearn.linear_model import Ridge, Lasso
+from sklearn.linear_model import Ridge, Lasso, LogisticRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 
@@ -82,5 +82,29 @@ def tune_model(models, X, Y, save_results=True):
             dt_stamp = datetime.now().strftime('%m-%d_%H-%M')
             filename = f'./Model_results/RF_{Y.name}_{dt_stamp}.sav'
             pickle.dump(grid_search['random_forest'], open(filename, 'wb'))
+
+    # -------------------------- Logistic regression _________________________
+    if 'logistic' in models:
+        print('===== Logistic regression =====')
+        tic = time.time()
+
+        logit = LogisticRegression()
+
+        params = {
+            'penalty': ['l1', 'l2'],
+            'C': [1e-3, 1e-1, 1, 10, 50, 100, 200],
+            'solver':['liblinear', 'lbfgs', 'sag', 'saga']
+        }
+
+        grid_search['logistic'] = GridSearchCV(logit, params, cv=3, verbose=3)
+
+        grid_search['logistic'].fit(X, Y)
+
+        print(f'Time to tune : {np.round((time.time() - tic) / 60)} min')
+
+        if save_results:
+            dt_stamp = datetime.now().strftime('%m-%d_%H-%M')
+            filename = f'./Model_results/logistic_{Y.name}_{dt_stamp}.sav'
+            pickle.dump(grid_search['logistic'], open(filename, 'wb'))
 
     return grid_search

@@ -1,14 +1,10 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 
-from helpers import normalize_arr
+from model_validation import plot_roc, plot_report_metrics
 from train_model import tune_model
-from model_validation import score_regression
-
-import warnings
-warnings.filterwarnings('ignore')
+from helpers import normalize_arr
 
 mode = 'recent'
 
@@ -22,8 +18,7 @@ ordinal = [
     'sub_grade',
     'initial_list_status',  # LC claims this is purely random: chi2 test!
     'emp_length',
-    'verification_status',
-    '_has_desc',
+    'verification_status'
 ]
 
 nominal = [
@@ -49,11 +44,10 @@ numeric = [
     'term'
 ]
 
-targets = ['returns_1', 'returns_25', 'returns_5']
-target = 'returns_25'
+target = '_good'
 
-X = df[ordinal+nominal+numeric]
-Y = df[targets]
+X = df[nominal+ordinal+numeric]
+Y = df[target]
 
 # ---------------------------- Preprocessing ----------------------------
 
@@ -87,25 +81,13 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=.2, random_s
 if dummify & normalize:
     X_train, X_test = normalize_arr(X_train, X_test)
 
-# -------------------------- Linear model ----------------------------
+# ------------------------ Classification ------------------------------
 
-list_models = ['ridge']
+list_models = ['logistic']
 
-grids = tune_model(list_models, X_train, Y_train[target])
+grids = tune_model(list_models, X_train, Y_train)
 
-score_regression(grids['ridge'].best_estimator_, X_test, Y_test[target], prints=True, save_results=True)
+Y_train_hat = grids['logistic'].best_estimator_.predict(X_train)
+Y_test_hat = grids['logistic'].best_estimator_.predict(X_test)
 
-predicted_returns = {}
-
-for name, model in grids.items():
-    print(f'===== {name} =====')
-    predicted_returns[name] = model.best_estimator_.predict(X_test)
-    print(f'{name} \t Best estimator : {model.best_params_} \t Best score : {model.best_score_}')
-
-    plt.hist(predicted_returns[name], bins=40, label=name, alpha=.5)
-
-plt.hist(Y_test[target], bins=40, label='True value', alpha=.5)
-
-plt.legend()
-plt.show()
-
+plot_roc(Y_train_hat, Y_test_hat, Y_train, Y_test, 'logistic')
